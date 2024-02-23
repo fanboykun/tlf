@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Middleware\JWTAuthenticateViaCookie;
 use App\Models\Post;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Route;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,5 +19,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->intended('/login');
 });
+
+Route::get('/login', function () {
+    return view('welcome');
+})->name('login');
+
+Route::middleware(JWTAuthenticateViaCookie::class)->get('/home', function ( Request $request ) {
+    return view('home');
+})->name('home');
