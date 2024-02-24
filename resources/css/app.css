@@ -5,6 +5,10 @@ body {
 .hover-shadow-lg:hover {
     box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }
+.post-item {
+    min-height: 425px;
+    /* max-height: 425px; */
+}
 @media screen and (max-width: 1200px) {
     .post-item-wrapper {
         flex-direction: column !important;

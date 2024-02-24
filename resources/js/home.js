@@ -23,18 +23,13 @@ import "./app"
  * @property {string} date
  * @property {string} desc
  * @property {string} time
- * @property {string[]} tags
+ * @property {string[]?} tags
  */
 
 /**
  * @typedef {Object} BarePostResponseData
- * @property {PostListResponseData} data
+ * @property {{ postList: PostList[] }} data
 */
-
-/**
- * @typedef {Object} PostListResponseData
- * @property {PostList[]} postList
- */
 
 /**
  * @exports @typedef {import("axios").AxiosResponse<BarePostResponseData>} GetPostResponse
@@ -71,6 +66,7 @@ $(document).ready(async () => {
      * @param {PostList[]} data
      */
     const appendData = (data) => {
+        let shouldRegisterClickEvent = true
 
         /** @type {HTMLTemplateElement} */
         const template = document.querySelector('#post-item-template')
@@ -83,7 +79,10 @@ $(document).ready(async () => {
 
         data.map((item, key) => {
             const i = template.content.cloneNode(true)
-            if(!i) return
+            if(!i) {
+                shouldRegisterClickEvent = false
+                return
+            }
 
             i.querySelector('#post-title').textContent = item.title // apply title
             i.querySelector('#post-body').textContent = item.detail.desc // apply description
@@ -119,7 +118,7 @@ $(document).ready(async () => {
             }
             postList.append(i)
         })
-        registerClickEvent()
+        if(shouldRegisterClickEvent) return registerClickEvent()
     }
 
     /**
@@ -145,11 +144,17 @@ $(document).ready(async () => {
      * @returns {void}
      */
     const registerClickEvent = () => {
+        // prevent from registering the event too many times
         if(isClickEventRegistered) return
         isClickEventRegistered = true
         $('button[id="accordionTrigger"]').each((index, element) => {
             $(element).click(function(){
-
+                if($(element).hasClass('show')) return
+                let mainItem = $(element).closest('#post-item')
+                if(!mainItem) return
+                $('html, body').animate({
+                    scrollTop: $(mainItem).offset().top
+                }, 100);
             })
         })
     }
@@ -157,7 +162,6 @@ $(document).ready(async () => {
     /** Get the auth token */
     const token = getTokenFromCookie(true)
     if(!token) {
-        // console.log('err')
         return window.location.href ="/login"
     }
     await getPostsData()
