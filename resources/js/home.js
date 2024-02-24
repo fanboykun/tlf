@@ -27,10 +27,24 @@ import "./app"
  */
 
 /**
+ * @typedef {Object} BarePostResponseData
+ * @property {PostListResponseData} data
+*/
+
+/**
+ * @typedef {Object} PostListResponseData
+ * @property {PostList[]} postList
+ */
+
+/**
+ * @exports @typedef {import("axios").AxiosResponse<BarePostResponseData>} GetPostResponse
+ */
+
+/**
  * Get Auth token from cookie, then append the token to axios.defaults.headers.common['Authorization']
  * @returns {string?} authToken
  */
-export const getToken = async () => {
+export const getTokenFromCookie = async (redicrectIfNull = false) => {
     const decodedToken = decodeURIComponent(document.cookie)
     const tokens = decodedToken.split(';')
     let authToken = ''
@@ -44,12 +58,12 @@ export const getToken = async () => {
                 authToken = trimmedToken[1]
             }
         })
-        if(authToken == '') return window.location.href="/login"
+        if(authToken == '' && redicrectIfNull === true) return window.location.href = "/login"
         return authToken
     }
 }
 
-$(document).ready(async (e) => {
+$(document).ready(async () => {
     let isClickEventRegistered = false
     /**
      * Append post data to element(s)
@@ -70,10 +84,39 @@ $(document).ready(async (e) => {
         data.map((item, key) => {
             const i = template.content.cloneNode(true)
             if(!i) return
-            i.querySelector('#post-title').textContent = item.title
-            i.querySelector('#post-body').textContent = item.detail.desc
-            i.querySelector('#post-image').src = item.image
-            i.querySelector('#post-button').href = `/post/${item.slug}`
+
+            i.querySelector('#post-title').textContent = item.title // apply title
+            i.querySelector('#post-body').textContent = item.detail.desc // apply description
+            i.querySelector('#post-image').src = item.image // apply image
+            i.querySelector('#post-author-name').textContent = item.author.name // apply author name
+            i.querySelector('#post-category').textContent = item.category   // apply category
+            i.querySelector('#post-date').textContent = item.detail.date    // apply detail date
+            i.querySelector('#post-time').textContent = item.detail.time    // apply detail time
+
+            let newAccordionId = `accordion-${key}`
+            let newAccordionItemId = `item-${newAccordionId}`
+            /** @type {HTMLDivElement} */ let accordionWp = i.querySelector('#accordionExample')
+            /** @type {HTMLDivElement} */ let accordionItem = accordionWp.querySelector('#accrodionItem')
+            /** @type {HTMLButtonElement} */ let accordionTrigger = accordionWp.querySelector('#accordionTrigger')
+
+            // set the attributes for accordion
+            accordionWp.setAttribute('id', newAccordionId)
+            accordionItem.setAttribute('data-bs-parent', newAccordionId)
+            accordionItem.setAttribute('id', newAccordionItemId)
+            accordionTrigger.setAttribute('data-bs-target', `#${newAccordionItemId}`)
+
+
+            /** @type {HTMLDivElement} */ let tagWp = i.querySelector('#tags-item-wrapper')
+            /** @type {HTMLParagraphElement} */ let tagEl = tagWp.querySelector('#tag-item')
+            tagWp.innerHTML = ''    // empty the innerHTML
+            if(item.detail.tags.length != 0) {
+                if(!tagEl) return
+                item.detail.tags.map((val) => {
+                    const clonedEl = tagEl.cloneNode(true)
+                    clonedEl.textContent = val
+                    tagWp.append(clonedEl)
+                })
+            }
             postList.append(i)
         })
         registerClickEvent()
@@ -81,35 +124,20 @@ $(document).ready(async (e) => {
 
     /**
      * Get/fetch posts data from backend
-     * @returns {void}
+     * @returns {Promise<void>}
      */
-    const getPostsData = () => {
-        axios.get('/api/post/auth/get')
-            /**
-             * @type {Object} res
-            */
-            .then(res => {
-                if(res.status !== 200) return
-               return appendData(res.data.data.postList)
-            })
-            .catch(err => {
-                console.log(err)
-            })
-        return false; // prevent default form submit behavior.
-    }
-
-    /**
-     * Show post description
-     * @returns {void}
-     * @param {Event} e
-     */
-    const showDescription = (e) => {
-        e.preventDefault()
-        /** @type {HTMLButtonElement} */
-        const target = e.target
-        const postBody = target.parentNode?.querySelector('#post-body')
-        if(!postBody) return
-        postBody.classList.toggle('d-none')
+    const getPostsData = async() => {
+        try {
+            /** @type {GetPostResponse} */
+            const res = await axios.get('/api/post/auth/get')
+            if(res.status !== 200) {
+                throw('Failed to fect data from the server')
+            }
+            return appendData(res.data.data.postList)
+        } catch (err) {
+            console.error('Failed to fect data from the server')
+            console.log(err)
+        }
     }
 
     /**
@@ -119,15 +147,19 @@ $(document).ready(async (e) => {
     const registerClickEvent = () => {
         if(isClickEventRegistered) return
         isClickEventRegistered = true
-        document.querySelectorAll('#post-button').forEach(async (element) => {
-            element.addEventListener('click', showDescription)
+        $('button[id="accordionTrigger"]').each((index, element) => {
+            $(element).click(function(){
+
+            })
         })
     }
 
     /** Get the auth token */
-    const token = await getToken()
-    if(token) {
-        getPostsData()
+    const token = getTokenFromCookie(true)
+    if(!token) {
+        // console.log('err')
+        return window.location.href ="/login"
     }
+    await getPostsData()
 
 })

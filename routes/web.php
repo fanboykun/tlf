@@ -25,7 +25,6 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('welcome');
 })->name('login');
-
 Route::middleware(JWTAuthenticateViaCookie::class)->get('/home', function ( Request $request ) {
     return view('home');
 })->name('home');

@@ -2,3 +2,38 @@
 body {
     font-family: "Montserrat", sans-serif
 }
+.hover-shadow-lg:hover {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+@media screen and (max-width: 1200px) {
+    .post-item-wrapper {
+        flex-direction: column !important;
+    }
+    .post-item {
+        width: 100% !important;
+    }
+}
+@media screen and (max-width: 1000px) {
+    .login-form-wp {
+        width: 80% !important;
+    }
+}
+@media screen and (max-width: 720px) {
+    .post-detail {
+        flex-direction: column !important;
+    }
+
+    .login-form-wp {
+        width: 90% !important;
+    }
+
+    .post-detail-conntent {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+}
+
+.page-title-wp {
+    background: rgb(2,0,36);
+    background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+}
