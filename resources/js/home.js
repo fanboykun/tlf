@@ -1,6 +1,5 @@
 "use strict"
 import "./app"
-import { loadingSpinner } from "./app"
 
 /**
  * @typedef {Object} PostList
@@ -27,7 +26,10 @@ import { loadingSpinner } from "./app"
  * @property {string[]} tags
  */
 
-/** @returns {void} */
+/**
+ * Get Auth token from cookie, then append the token to axios.defaults.headers.common['Authorization']
+ * @returns {string?} authToken
+ */
 export const getToken = async () => {
     const decodedToken = decodeURIComponent(document.cookie)
     const tokens = decodedToken.split(';')
@@ -47,9 +49,10 @@ export const getToken = async () => {
     }
 }
 
-window.addEventListener('DOMContentLoaded', async (e) => {
+$(document).ready(async (e) => {
     let isClickEventRegistered = false
     /**
+     * Append post data to element(s)
      * @returns {void}
      * @param {PostList[]} data
      */
@@ -76,7 +79,10 @@ window.addEventListener('DOMContentLoaded', async (e) => {
         registerClickEvent()
     }
 
-    /** @returns {void} */
+    /**
+     * Get/fetch posts data from backend
+     * @returns {void}
+     */
     const getPostsData = () => {
         axios.get('/api/post/auth/get')
             /**
@@ -92,12 +98,8 @@ window.addEventListener('DOMContentLoaded', async (e) => {
         return false; // prevent default form submit behavior.
     }
 
-    const token = await getToken()
-    if(token) {
-        getPostsData()
-    }
-
     /**
+     * Show post description
      * @returns {void}
      * @param {Event} e
      */
@@ -110,13 +112,22 @@ window.addEventListener('DOMContentLoaded', async (e) => {
         postBody.classList.toggle('d-none')
     }
 
-    /** @returns {void} */
+    /**
+     * Register the post element click event when posts lists has been appended to the document
+     * @returns {void}
+     */
     const registerClickEvent = () => {
         if(isClickEventRegistered) return
         isClickEventRegistered = true
         document.querySelectorAll('#post-button').forEach(async (element) => {
             element.addEventListener('click', showDescription)
         })
+    }
+
+    /** Get the auth token */
+    const token = await getToken()
+    if(token) {
+        getPostsData()
     }
 
 })

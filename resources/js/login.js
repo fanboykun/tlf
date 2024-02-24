@@ -22,10 +22,16 @@ import { loadingSpinner } from "./app"
  * @property {string} token_type
  */
 
-window.addEventListener('DOMContentLoaded', () => {
+$(document).ready((e) => {
     /** Toggle Show Password */
     let isPasswordShown = false
-    $('#showPassword').click(() => {
+
+    /**
+     * Handle the show password toggle
+     * @param {Event} e
+     * @returns {void}
+     */
+    const handleShowPassword = (e) => {
         isPasswordShown = !isPasswordShown
         if(isPasswordShown) {
             $('input[name="password"]').attr('type', 'text')
@@ -36,14 +42,22 @@ window.addEventListener('DOMContentLoaded', () => {
             $('#showPasswordIcon').removeClass('d-none')
             $('#hidePasswordIcon').addClass('d-none')
         }
-    })
+    }
 
-    /** Login Form Handler */
-    $('#loginForm').submit((e) => {
+    /** Login Form Handler
+     * @returns {void}
+     * @param {Event} e
+    */
+    const handleLoginFormSubmit = (e) => {
         e.preventDefault()
+
         /** @type {ValidationMessage} */
         const ValidationMessage = { email: [], password: [] }
+
+        /** @type {RegExp} */
         const regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+
+        /** @type {FormData} */
         const formData = new FormData(e.target)
 
         /** @type {LoginFormData} */
@@ -51,7 +65,10 @@ window.addEventListener('DOMContentLoaded', () => {
         $('#submit')?.attr('disabled', true)
         $('#submit')?.append(loadingSpinner)
 
-        /** @return bool */
+        /**
+         * Validate the login form
+         * @return bool
+         */
         const validate = () => {
             let validated = true
             if(data.email === '') {
@@ -70,6 +87,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         /**
+         * Redirect to home page after login successfull
          * @return {void}
          * @param {AuthenticatedData} authData
          */
@@ -78,7 +96,10 @@ window.addEventListener('DOMContentLoaded', () => {
             window.location.href = `/home`
         }
 
-        /** @return void */
+        /**
+         * Submit the login credential
+         * @return void
+         */
         const submit = () => {
             axios.post('/api/login', data)
                 /**
@@ -86,8 +107,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 */
                 .then(res => {
                     if(res.status !== 200) return
-                    $('#submit')?.removeAttr('disabled')
-                    $('#loading-spinner')?.remove()
+                    resetForm()
                     redirectToHome(res.data)
                 })
                 .catch(err => {
@@ -96,7 +116,10 @@ window.addEventListener('DOMContentLoaded', () => {
             return false; // prevent default form submit behavior.
         }
 
-        /** @return void */
+        /**
+         * Show the form validation message if error exsist
+         *  @return void
+         */
         const showValidationMessage = () => {
             $('#submit')?.removeAttr('disabled')
             $('#loading-spinner')?.remove()
@@ -110,8 +133,21 @@ window.addEventListener('DOMContentLoaded', () => {
             })
         }
 
+        /**
+         * Reset form input
+         * @returns {void}
+         */
+        const resetForm = () => {
+            $('#submit')?.removeAttr('disabled')
+            $('#loading-spinner')?.remove()
+            $('#email').val('')
+            $('#password').val('')
+        }
+
         if(!validate()) return showValidationMessage()
         return submit()
+    }
 
-    })
+    $('#showPassword').click(handleShowPassword)
+    $('#loginForm').submit(handleLoginFormSubmit)
 })

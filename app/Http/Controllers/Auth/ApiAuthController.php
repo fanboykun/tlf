@@ -31,7 +31,7 @@ class ApiAuthController extends Controller
         if (! $token = auth()->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        setcookie('jwt_auth', $token, time() + 3600, '/');
+        setcookie('jwt_auth', $token, time() + 3600 * 24, '/');
         return $this->respondWithToken($token);
     }
 
@@ -80,7 +80,7 @@ class ApiAuthController extends Controller
         ->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth()->factory()->getTTL() * 60 * 24
         ]);
     }
 }
