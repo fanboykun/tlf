@@ -12,11 +12,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::factory(2)->hasPosts(2)->create();
-        $posts = \App\Models\Post::all();
-        foreach ($posts as $post) {
-            \App\Models\Detail::factory()->for($post)->create();
-        }
-
+        \App\Models\User::factory(2)->has(
+            \App\Models\Post::factory(2)->has(\App\Models\Detail::factory())
+        )->create();
     }
 }

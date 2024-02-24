@@ -20,8 +20,8 @@
     </head>
     <body>
         <div class="d-flex justify-content-center p-3">
-            <div class="page-title-wp card py-2 border-0 shadow w-75">
-                <h5 class=" card-header text-center fs-2 fw-bold bg-transparent border-0 text-white">Post List</h5>
+            <div class="card py-2 border-0 w-75">
+                <h5 class="card-header text-center fs-2 fw-bold bg-transparent border-0">Post List</h5>
             </div>
         </div>
         <div id="post-item-wrapper" class="post-item-wrapper d-flex flex-row flex-wrap justify-space-between p-3 rounded border-info-subtle w-100"></div>
