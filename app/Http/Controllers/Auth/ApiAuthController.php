@@ -10,21 +10,11 @@ use Illuminate\Support\Facades\Cookie;
 class ApiAuthController extends Controller
 {
     /**
-     * Create a new AuthController instance.
-     *
-     * @return void
-     */
-    // public function __construct()
-    // {
-    //     $this->middleware('auth:api', ['except' => ['login']]);
-    // }
-
-    /**
      * Get a JWT via given credentials.
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login()
+    public function login(): \Illuminate\Http\JsonResponse
     {
         $credentials = request(['email', 'password']);
 
@@ -40,7 +30,7 @@ class ApiAuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function me()
+    public function me(): \Illuminate\Http\JsonResponse
     {
         return response()->json(auth()->user());
     }
@@ -50,7 +40,7 @@ class ApiAuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function logout()
+    public function logout(): \Illuminate\Http\JsonResponse
     {
         auth()->logout();
 
@@ -62,9 +52,11 @@ class ApiAuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function refresh()
+    public function refresh(): \Illuminate\Http\JsonResponse
     {
-        return $this->respondWithToken(auth()->refresh());
+        (string) $token = auth()->refresh();
+        $this->setJwtTokenToCookie($token);
+        return $this->respondWithToken($token);
     }
 
     /**
@@ -74,7 +66,7 @@ class ApiAuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function respondWithToken($token)
+    protected function respondWithToken($token) : \Illuminate\Http\JsonResponse
     {
         return response()
         ->json([
@@ -83,4 +75,51 @@ class ApiAuthController extends Controller
             'expires_in' => auth()->factory()->getTTL() * 60 * 24
         ]);
     }
+
+    /**
+     * Set auth token to cookie
+     *
+     * @param string $token
+     * @return void
+     */
+    protected function setJwtTokenToCookie(string $token) : void
+    {
+        setcookie('jwt_auth', $token, time() + 3600 * 24, '/');
+    }
+    /**
+     * Unset existsing auth token from cookie
+     *
+     * @param string $token
+     * @return void
+     */
+    protected function unsetJwtTokenFromCookie(string|array $token) : void
+    {
+        setcookie('jwt_auth', $token, time() - 3600, '/');
+    }
+
+    /**
+     * Validate a given token
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+     public function validateToken() : \Illuminate\Http\JsonResponse
+     {
+        $is_authenticated = auth('api')->check();
+        return response()->json([
+            'authenticated' => $is_authenticated
+        ]);
+     }
+
+     /**
+      * validated the auth token from cookie
+      * @param Request $request
+      * @return \Illuminate\Http\JsonResponse
+      */
+     public function validateTokenFromCookie(Request $request) : \Illuminate\Http\JsonResponse
+     {
+        if($request->cookie("jwt_auth") != null) {
+            return $this->validateToken();
+        }
+        return response()->json(['authenticated' => false]);
+     }
 }

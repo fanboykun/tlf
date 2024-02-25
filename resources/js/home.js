@@ -1,5 +1,7 @@
 "use strict"
-import "./app"
+import { getTokenFromCookie, validateToken, getMe, logoutUser } from "./app"
+
+/** @typedef {import("axios").AxiosResponse<{ data: { postList: PostList[] } }>} GetPostResponse */
 
 /**
  * @typedef {Object} PostList
@@ -26,37 +28,15 @@ import "./app"
  * @property {string[]?} tags
  */
 
-/**
- * @typedef {Object} BarePostResponseData
- * @property {{ postList: PostList[] }} data
-*/
-
-/**
- * @exports @typedef {import("axios").AxiosResponse<BarePostResponseData>} GetPostResponse
- */
-
-/**
- * Get Auth token from cookie, then append the token to axios.defaults.headers.common['Authorization']
- * @returns {string?} authToken
- */
-export const getTokenFromCookie = async (redicrectIfNull = false) => {
-    const decodedToken = decodeURIComponent(document.cookie)
-    const tokens = decodedToken.split(';')
-    let authToken = ''
-    if( tokens.length == 0 ) return
-    if(tokens instanceof Array) {
-        tokens.forEach((token) => {
-            if(token.indexOf('jwt_auth') > -1 ) {
-                const trimmedToken = token.split('=')
-                if(trimmedToken.length != 2 ) return
-                axios.defaults.headers.common['Authorization'] = `Bearer ${trimmedToken[1]}`
-                authToken = trimmedToken[1]
-            }
-        })
-        if(authToken == '' && redicrectIfNull === true) return window.location.href = "/login"
-        return authToken
-    }
-}
+/** Consider what this block code does is doing the same thing as auth middleware */
+(async() => {
+    /** Get the auth token */
+    const token = await getTokenFromCookie( true )
+    if(!token) window.location.href ="/login"    // if token is falsy, the return to login immediatelly
+    /** check is token valid */
+    const tokenValidated = validateToken(token)
+    if(!tokenValidated) window.location.href ="/login"   // return to login page, because maybe the token is expired
+})()
 
 $(document).ready(async () => {
     let isClickEventRegistered = false
@@ -135,7 +115,10 @@ $(document).ready(async () => {
             return appendData(res.data.data.postList)
         } catch (err) {
             console.error('Failed to fect data from the server')
-            console.log(err)
+            // redirect if the message is unauthenticated
+            if(err.response.status) {
+                return window.location.href = "/login"
+            }
         }
     }
 
@@ -149,7 +132,10 @@ $(document).ready(async () => {
         isClickEventRegistered = true
         $('button[id="accordionTrigger"]').each((index, element) => {
             $(element).click(function(){
-                if($(element).hasClass('show')) return
+                //check if accordio item is exapanded, if so, no need to scroll
+                if($(element).attr('aria-expanded') === 'false') return
+
+                // apply scroll into view
                 let mainItem = $(element).closest('#post-item')
                 if(!mainItem) return
                 $('html, body').animate({
@@ -159,11 +145,32 @@ $(document).ready(async () => {
         })
     }
 
-    /** Get the auth token */
-    const token = getTokenFromCookie(true)
-    if(!token) {
-        return window.location.href ="/login"
+    /**
+     * Handle user logout
+     * @param {Event} event
+     * @returns {Promise<void>}
+     */
+    const handleLogout = async (event) => {
+        event.preventDefault()
+        const res = await logoutUser(true)
+        if(res.message) {
+            console.log(res)
+            return window.location.href = '/login'
+        }
     }
-    await getPostsData()
 
+    /**
+     * Get Current authenticated user, then append email to element
+     * @returns {Promise<void>}
+     */
+    const handleGetMe = async() => {
+        const me = await getMe()
+        if(me) {
+            $('#user-email').text(me?.email)
+        }
+    }
+
+    handleGetMe()
+    getPostsData()
+    $('#logout-btn').click(handleLogout)
 })

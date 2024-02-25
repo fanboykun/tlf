@@ -1,5 +1,6 @@
 "use strict"
 import { loadingSpinner } from "./app"
+import { getTokenFromCookie, validateToken } from "./app"
 /**
  * Login Form Object Type
  * @typedef {Object} LoginFormData
@@ -22,7 +23,22 @@ import { loadingSpinner } from "./app"
  * @property {string} token_type
  */
 
-$(document).ready((e) => {
+
+/** consider what this block of code do it just like a guest middleware
+ * check token, if exists and valid, redirect to home
+ * otherwise stay in the page
+ */
+const token = await getTokenFromCookie()
+if(token) {
+    // validate the token
+    const tokenValidated = await validateToken(token)
+    if(tokenValidated) {
+        // if token is valid, redirect to home
+        window.location.href = "/home"
+    }
+}
+
+$(document).ready( async () => {
     /** Toggle Show Password */
     let isPasswordShown = false
 
@@ -92,7 +108,7 @@ $(document).ready((e) => {
          * @param {AuthenticatedData} authData
          */
         const redirectToHome = (authData) => {
-            console.log(authData)
+            // console.log(authData)
             window.location.href = `/home`
         }
 
@@ -106,6 +122,7 @@ $(document).ready((e) => {
                  * @type {Object} res
                 */
                 .then(res => {
+                    console.log(res)
                     if(res.status !== 200) return
                     resetForm()
                     redirectToHome(res.data)

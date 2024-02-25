@@ -19,7 +19,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('login', [ApiAuthController::class, 'login']);
 Route::get('/post/only/get', [BlogPostController::class, 'index']);
+
+Route::get('validateToken', [ApiAuthController::class, 'validateToken']);
+
 Route::group(['middleware' => 'auth:api'], function () : void {
+
     Route::post('logout', [ApiAuthController::class, 'logout']);
     Route::post('refresh', [ApiAuthController::class, 'refresh']);
     Route::post('me', [ApiAuthController::class, 'me']);
