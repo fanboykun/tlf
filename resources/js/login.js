@@ -28,15 +28,18 @@ import { getTokenFromCookie, validateToken } from "./app"
  * check token, if exists and valid, redirect to home
  * otherwise stay in the page
  */
-const token = await getTokenFromCookie()
-if(token) {
-    // validate the token
-    const tokenValidated = await validateToken(token)
-    if(tokenValidated) {
-        // if token is valid, redirect to home
-        window.location.href = "/home"
+(async () => {
+    const token = await getTokenFromCookie()
+    if(token) {
+        // validate the token
+        const tokenValidated = await validateToken(token)
+        if(tokenValidated) {
+            // if token is valid, redirect to home
+            window.location.href = "/home"
+        }
     }
-}
+})()
+
 
 $(document).ready( async () => {
     /** Toggle Show Password */
