@@ -20,6 +20,8 @@ return new class extends Migration
             $table->longText('image');
             $table->longText('slug');
             $table->timestamps();
+
+            $table->index(['uuid']);    // index the uuid
         });
     }
 
